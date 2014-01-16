@@ -1,0 +1,7 @@
+{
+  "name": "jsk_interactive_test_server",
+  "version": "0.0.1",
+  "dependencies": {
+    "jquery": "*"
+  }
+}
