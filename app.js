@@ -8,8 +8,15 @@ var routes = require('./routes');
 var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
-
+var mongoose = require('mongoose');
 var app = express();
+
+if (process.env.MONGOLAB_URI) {
+  mongoose.connect(process.env.MONGOLAB_URI);
+}
+else {
+  mongoose.connect('mongodb://localhost/jsk_db');
+}
 
 // all environments
 app.set('port', process.env.PORT || 3000);
