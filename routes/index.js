@@ -1,8 +1,6 @@
+var _ = require('lodash');
+var files = ['_index', 'interactive_marker_test'];
 
-/*
- * GET home page.
- */
-
-exports.index = function(req, res){
-  res.render('index', { title: 'Express' });
-};
+exports.routes = _.map(files, function(f) {
+    return require('./' + f);
+});

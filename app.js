@@ -4,7 +4,6 @@
  */
 
 var express = require('express');
-var routes = require('./routes');
 var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
@@ -17,6 +16,8 @@ if (process.env.MONGOLAB_URI) {
 else {
   mongoose.connect('mongodb://localhost/jsk_db');
 }
+
+require('./models');
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -35,8 +36,34 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/', routes.index);
-app.get('/users', user.list);
+// app.get('/', routes.index);
+// app.get('/users', user.list);
+
+// routing
+var routes = require("./routes");
+routes.routes.forEach(function(r) {
+  if (r.get_url && r.get) {
+    if (r.get_url instanceof Array) {
+      r.get_url.forEach(function(u) {
+        app.get(u, r.get);
+      });
+    }
+    else {
+      app.get(r.get_url, r.get);
+    }
+  }
+  if (r.post_url && r.post) {
+    if (r.post_url instanceof Array) {
+      r.post_url.forEach(function(u) {
+        app.post(u, r.post);
+      });
+    }
+    else {
+      app.post(r.post_url, r.post);
+    }
+  }
+});
+
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));

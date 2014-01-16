@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>JSK DB -- Interactive Marker Records</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1>Interactive Marker Records</h1>
+    <ol>
+      <% for (var i = 0; i < records.length; i++) { %>
+      <li>
+        <% var record = records[i]; %>
+        <%= record.user %> /
+        <%= record.ui_type %> /
+        <%= record.time %>[sec]
+      </li>
+      <% } %>
+    </ol>
+  </body>
+</html>
