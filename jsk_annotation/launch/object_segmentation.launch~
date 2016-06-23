@@ -1,0 +1,69 @@
+<launch>
+  <arg name="input_cloud" default="/kinect_head_c2/depth_registered/points" />
+  <arg name="sensor_frame" default="/head_mount_kinect_rgb_optical_frame" />
+  <arg name="manager" default="object_segmentation_nodelet_manager" />
+  <arg name="launch_manager" default="true" />
+
+  <arg name="ROBOT" default="$(env ROBOT)" />
+  <arg name="machine" default="c2" />
+  <include file="$(find pr2_machine)/$(arg ROBOT).machine" />
+
+  <node name="$(arg manager)" pkg="nodelet" type="nodelet" args="manager"
+        machine="$(arg machine)" if="$(arg launch_manager)"
+        output="screen" />
+
+  <node name="input_relay" pkg="nodelet" type="nodelet"
+        args="load jsk_topic_tools/Relay $(arg manager)"
+        machine="$(arg machine)">
+    <remap from="~input" to="$(arg input_cloud)" />
+  </node>
+  <node name="multi_plane_estimate" pkg="nodelet" type="nodelet"
+        args="load jsk_pcl/OrganizedMultiPlaneSegmentation $(arg manager)"
+        output="screen"
+        if="$(arg launch_manager)"
+        machine="$(arg machine)">
+    <remap from="~input" to="input_relay/output" />
+    <rosparam>
+      max_curvature: 0.01
+      estimate_normal: true
+    </rosparam>
+  </node>
+  <node name="polygon_magnifier" pkg="nodelet" type="nodelet"
+        args="load jsk_pcl_utils/PolygonMagnifier $(arg manager)"
+        output="screen"
+        machine="$(arg machine)">
+    <remap from="~input" to="multi_plane_estimate/output_refined_polygon" />
+  </node>
+  <node name="plane_extraction" pkg="nodelet" type="nodelet"
+        args="load jsk_pcl/MultiPlaneExtraction $(arg manager)"
+        output="screen"
+        machine="$(arg machine)">
+    <remap from="~input" to="input_relay/output" />
+    <remap from="~indices" to="/multi_plane_estimate/output_refined" />
+    <remap from="~input_polygons" to="/multi_plane_estimate/output_refined_polygon" />
+    <remap from="~input_coefficients" to="/multi_plane_estimate/output_refined_coefficients" />
+    <rosparam subst_value="true">
+      use_sensor_frame: true
+      sensor_frame: $(arg sensor_frame)
+      min_height: 0.03
+    </rosparam>
+  </node>
+  <node name="euclidean_clustering" pkg="nodelet" type="nodelet"
+        args="load jsk_pcl/EuclideanClustering $(arg manager)"
+        output="screen"
+        machine="$(arg machine)">
+    <remap from="~input" to="/plane_extraction/output" />
+    <rosparam>
+      tolerance: 0.02
+      min_size: 100
+    </rosparam>
+  </node>
+  <node name="throttle_segmentation" pkg="nodelet" type="nodelet"
+        args="load jsk_topic_tools/LightweightThrottle $(arg manager)"
+        output="screen"
+        machine="$(arg machine)">
+    <remap from="~input" to="euclidean_clustering/output" />
+    <remap from="~output" to="euclidean_clustering/output_throttle" />
+  </node>
+
+</launch>
