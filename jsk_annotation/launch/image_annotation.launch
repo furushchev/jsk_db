@@ -1,0 +1,11 @@
+<launch>
+  <arg name="input_image" default="/kinect_head_c2/rgb/image_rect_color" />
+  <arg name="input_label" default="/segmentation_decomposer/label" />
+
+  <node name="color_histogram_annotator" pkg="jsk_annotation" type="color_histogram_annotator.py"
+        output="screen" >
+    <param name="annotator_type" value="color" />
+    <remap from="~image" to="$(arg input_image)" />
+    <remap from="~label" to="$(arg input_label)" />
+  </node>
+</launch>
